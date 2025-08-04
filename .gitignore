@@ -1,0 +1,21 @@
+# Ignore Python virtual environments
+venv/
+.env
+*.env
+
+# Ignore data files (cleaned and raw)
+cleaned_data/
+raw_data/
+*.csv
+
+# Ignore Python cache files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Ignore Jupyter checkpoints (if applicable)
+.ipynb_checkpoints/
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
