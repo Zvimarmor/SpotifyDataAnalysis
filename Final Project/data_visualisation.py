@@ -50,7 +50,7 @@ df['year'] = df['year'].astype(int)
 genre_year_popularity = df.groupby(['track_genre', 'year'])['popularity'].mean().reset_index()
 
 # Keep top N most common genres
-top_genres = df['track_genre'].value_counts().head(10).index.tolist()
+top_genres = df['track_genre'].value_counts().head(20).index.tolist()
 genre_year_popularity = genre_year_popularity[genre_year_popularity['track_genre'].isin(top_genres)]
 
 # Plot
@@ -77,7 +77,7 @@ def clean_title(title):
     title = re.sub(r'featuring[^\s]*', '', title, flags=re.IGNORECASE) # featuring...
     return title.strip().lower()
 
-popular_titles = df[df['popularity'] >= 80]['track_name_x'].astype(str).apply(clean_title)
+popular_titles = df[df['popularity'] >= 70]['track_name_x'].astype(str).apply(clean_title)
 title_words = " ".join(popular_titles.tolist())
 title_wordcloud = WordCloud(width=1000, height=600, background_color='white',
                             colormap='plasma', max_words=100).generate(title_words)
@@ -91,7 +91,7 @@ plt.savefig(f"{FIG_DIR}/wordcloud_track_titles_cleaned.png")
 plt.close()
 
 # ========== PLOT 3: Word Cloud - Most Common Artist Name Parts ==========
-top_songs = df[df['popularity'] >= 80]
+top_songs = df[df['popularity'] >= 70]
 artist_names = top_songs['artists'].astype(str).str.lower()
 
 # Replace separators like ; , &

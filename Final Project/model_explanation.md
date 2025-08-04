@@ -1,12 +1,12 @@
 # Spotify Track Popularity Prediction
 
-This project focuses on predicting the **popularity level** of a song on Spotify using machine learning. Instead of regressing exact popularity scores (0–100), we divide popularity into 10 discrete brackets and approach the task as a **multi-class classification problem**.
+This project explores the prediction of **track popularity levels** on Spotify using machine learning methods. Rather than regressing a continuous score (0–100), the task is formulated as a **multi-class classification problem** with 10 discrete popularity brackets.
 
 ---
 
 ## Problem Setup
 
-We aim to classify each song into one of 10 popularity buckets:
+We classify each song into one of 10 popularity classes:
 
 | Class | Popularity Range |
 |-------|------------------|
@@ -21,212 +21,235 @@ We aim to classify each song into one of 10 popularity buckets:
 | 8     | 80–89            |
 | 9     | 90–100           |
 
-This approach simplifies the complexity of predicting an exact score, while still allowing us to evaluate how "close" predictions are.
+This discretization allows the model to focus on general trends rather than precise numerical prediction, while still enabling approximate popularity estimation.
 
 ---
 
 ## Dataset Assumptions
 
-We assume the following about the dataset:
-
-- Each row represents a single track.
-- Each track has acoustic and structural features (e.g., tempo, energy, danceability, etc.).
-- The target variable is Spotify's `popularity` score (integer from 0 to 100).
-- Tracks with multiple artists or missing fields are removed during preprocessing.
-- The `track_genre` field is one of the most influential categorical variables.
+- Each row represents a single song.
+- Songs are described by audio, structural, and categorical features.
+- The `popularity` column is a score from 0 to 100 assigned by Spotify.
+- Tracks with missing values or multiple artists were excluded.
+- The `track_genre` field is a key categorical feature in prediction.
 
 ---
 
-## Preprocessing
+## Preprocessing Pipeline
 
-- Dropped duplicates and missing values.
-- Standardized all numeric features using `StandardScaler`.
-- Applied one-hot encoding to the `track_genre` categorical feature.
-- Converted the continuous popularity score into a class label (0–9) using integer bucketing.
+- Duplicate rows and missing data were removed.
+- All numerical features were standardized using `StandardScaler`.
+- Categorical genre data was encoded using one-hot encoding.
+- Popularity was bucketed into classes 0 through 9.
 
 ---
 
 ## Neural Network Architecture (Keras)
 
-- Input: All standardized numeric and one-hot categorical features.
-- Hidden layers: 3 dense layers with sizes `[256, 128, 64]` and ReLU activations.
-- Regularization: Dropout layers (rate = 0.3) after each dense layer.
-- Output: 10-class softmax layer.
-- Loss: Categorical cross-entropy.
-- Optimizer: Adam.
-- Training enhancements:
-  - Class weights calculated based on class distribution (to mitigate imbalance).
-  - Early stopping based on validation loss (patience = 5).
+A feedforward neural network was constructed with the following design:
+
+- **Input:** Standardized numerical and one-hot categorical features.
+- **Hidden Layers:** Three fully connected layers with sizes `[256, 128, 64]` and ReLU activations.
+- **Regularization:** Dropout layers (rate = 0.3) follow each hidden layer.
+- **Output:** A softmax layer with 10 units (for each popularity class).
+- **Loss Function:** Categorical cross-entropy.
+- **Optimizer:** Adam.
+- **Training Strategy:**
+  - Class weights are computed to account for class imbalance.
+  - Early stopping is used with a patience of 5 epochs to prevent overfitting.
 
 ---
 
-## Additional Classifiers for Comparison
+## Additional Models for Benchmarking
 
-To benchmark the neural network, we implemented:
+To validate model performance, two classical classifiers were implemented using the same feature set:
 
 - **Decision Tree Classifier**
 - **K-Nearest Neighbors (KNN)**
 
-All models were evaluated on the same train/test split with the same feature set.
+These serve as interpretable and efficient baselines for comparison.
 
 ---
 
-## Baseline Model
+## Baseline Models
 
-We implemented a simple naive baseline model which always predicts the **most common class** in the training set (e.g., class 2). This helps determine whether our classifiers are learning meaningful patterns beyond simple class frequency.
+Two non-learned baselines were constructed:
 
-Performance of the baseline model:
+### 1. Most Frequent Class Baseline
 
-- Accuracy: 0.20
-- F1-score (weighted): 0.06
-- Precision and recall for all other classes: 0.00
+This model always predicts the most common class in the training data (class 2 in our case). Its performance reflects a naive strategy that ignores input features.
+
+**Performance Summary:**
+
+- Accuracy: 0.20  
+- Weighted F1-score: 0.06  
+- Precision and recall for all other classes: near zero
+
+### 2. Random Class Baseline
+
+This model randomly samples a class (0–9) for each prediction with equal probability. It serves as a reference for evaluating whether a model captures any structure at all.
+
+**Performance Summary:**
+
+- Accuracy: 0.10  
+- Weighted F1-score: 0.12  
+- Performance uniformly low across all classes
 
 ---
 
 ## Evaluation Metrics
 
-We used the following metrics:
+- **Top-1 Accuracy:** Whether the highest probability prediction matches the true class.
+- **Top-3 Accuracy:** Whether the true class is among the three most probable predictions (by softmax ranking).
 
-- **Top-1 Accuracy**: Standard accuracy – whether the top predicted class matches the true class.
-- **Top-3 Accuracy**: Whether the correct class appears in the top 3 predicted probabilities (by softmax).
-
-This allows us to evaluate not only exact correctness but also the model's ability to narrow down to the right region of popularity.
+Top-3 accuracy provides a relaxed measure of model confidence and proximity to correct prediction.
 
 ---
 
 ## Final Results
 
-| Model               | Top-1 Accuracy | Top-3 Accuracy |
-|--------------------|----------------|----------------|
-| Neural Network (Keras) | 0.46           | 0.80           |
-| Decision Tree       | 0.45           | N/A            |
-| K-Nearest Neighbors | 0.51           | N/A            |
-| Baseline (most common class) | 0.20    | N/A            |
+| Model                      | Top-1 Accuracy | Top-3 Accuracy |
+|---------------------------|----------------|----------------|
+| Neural Network (Keras)    | 0.46           | 0.80           |
+| K-Nearest Neighbors        | 0.51           | N/A            |
+| Decision Tree              | 0.45           | N/A            |
+| Baseline (most frequent)   | 0.20           | N/A            |
+| Baseline (random guessing) | 0.10           | N/A            |
 
-Note: While KNN slightly outperformed the neural network in Top-1, the neural model had far better precision in rare classes and achieved **very strong Top-3 accuracy**, demonstrating good generalization of "near-miss" predictions.
+Despite the slightly higher Top-1 accuracy of KNN, the neural network showed significantly better Top-3 performance and recall across rare classes, suggesting improved generalization.
 
 ---
 
-## File Structure
+## Project Structure
 
 - `model.py`: Main training and evaluation script
-- `cleaned_data/Spotify_Tracks_lone_artists.csv`: Cleaned input dataset
-- `model_explanation.md`: Documentation
+- `cleaned_data/Spotify_Tracks_lone_artists.csv`: Preprocessed input data
+- `model_explanation.md`: This documentation file
 - `requirements.txt`: Python dependencies
 
-
-
-
+---
 
 # חיזוי רמת הפופולריות של שירים בספוטיפיי
 
-מטרת הפרויקט היא לחזות את **רמת הפופולריות** של שיר בספוטיפיי באמצעות מודלים של למידת מכונה. במקום לחזות את ציון הפופולריות המדויק (0–100), חילקנו את התחום ל־10 קטגוריות (עשירונים) והתייחסנו למשימה כאל **בעיית סיווג רב־מחלקתי (multi-class classification)**.
+פרויקט זה עוסק בחיזוי **רמות פופולריות של שירים** בספוטיפיי באמצעות למידת מכונה. במקום לנבא ציון רציף בין 0 ל־100, המשימה מוגדרת כבעיית סיווג לעשר קטגוריות פופולריות נפרדות.
 
 ---
 
 ## הגדרת הבעיה
 
-כל שיר מקבל תווית פופולריות על פי הטווח הבא:
+מטרת המודל היא לשייך כל שיר לקטגוריה מתוך 10 טווחים:
 
 | קטגוריה | טווח פופולריות |
-|----------|-----------------|
-| 0        | 0–9             |
-| 1        | 10–19           |
-| 2        | 20–29           |
-| 3        | 30–39           |
-| 4        | 40–49           |
-| 5        | 50–59           |
-| 6        | 60–69           |
-| 7        | 70–79           |
-| 8        | 80–89           |
-| 9        | 90–100          |
+|----------|----------------|
+| 0        | 0–9            |
+| 1        | 10–19          |
+| 2        | 20–29          |
+| 3        | 30–39          |
+| 4        | 40–49          |
+| 5        | 50–59          |
+| 6        | 60–69          |
+| 7        | 70–79          |
+| 8        | 80–89          |
+| 9        | 90–100         |
 
-גישה זו מפשטת את החיזוי ומאפשרת למדוד הצלחה לפי קרבה לרמת הפופולריות.
+סיווג זה מפשט את בעיית החיזוי ומאפשר למידה על מגמות כלליות של פופולריות.
 
 ---
 
 ## הנחות על הדאטה
 
-- כל שורה מייצגת שיר יחיד.
-- הנתונים כוללים תכונות אקוסטיות ומבניות של השיר (כמו קצב, אנרגיה, ועוד).
-- ציון הפופולריות הוא של ספוטיפיי (בין 0 ל־100).
-- שירים עם שדות חסרים או ריבוי אמנים הוסרו.
-- השדה `track_genre` נחשב לתכונה קטגורית משמעותית במיוחד.
+- כל שורה מייצגת שיר בודד.
+- הנתונים כוללים מאפיינים אקוסטיים וקטגוריים של השיר.
+- עמודת `popularity` היא ציון בין 0 ל־100 שניתן על ידי ספוטיפיי.
+- הוסרו שירים עם ערכים חסרים או ריבוי אמנים.
+- השדה `track_genre` הוא תכונה קטגורית חשובה במיוחד.
 
 ---
 
-## עיבוד מקדים
+## תהליך עיבוד מקדים
 
-- סינון כפילויות ושורות עם ערכים חסרים.
-- נרמול של תכונות נומריות באמצעות `StandardScaler`.
-- המרה של `track_genre` ל־one-hot encoding.
-- המרה של הפופולריות לקטגוריות לפי עשירונים.
+- הוסרו כפילויות ושורות עם ערכים חסרים.
+- תכונות נומריות עברו סטנדרטיזציה עם `StandardScaler`.
+- קידוד `track_genre` בוצע באמצעות one-hot encoding.
+- ציון הפופולריות הומר לקטגוריה בין 0 ל־9 לפי עשירונים.
 
 ---
 
 ## ארכיטקטורת רשת עצבית (Keras)
 
-- קלט: כלל הפיצ'רים הנומריים והקטגוריים.
-- שכבות חבויות: `[256, 128, 64]` עם `ReLU`.
-- רגולריזציה: `Dropout` של 0.3 לאחר כל שכבה.
-- שכבת פלט: `softmax` עם 10 תוויות.
-- פונקציית הפסד: `categorical_crossentropy`.
-- אופטימיזר: Adam.
-- שיפורים:
-  - משקלי מחלקות אוטומטיים (לטיפול באי־איזון).
-  - עצירת אימון מוקדמת (`EarlyStopping`) לפי `val_loss`.
+מודל רשת עצבית נבנה עם המאפיינים הבאים:
+
+- **קלט:** פיצ'רים נומריים וקטגוריים תקניים.
+- **שכבות חבויות:** שלוש שכבות צפופות `[256, 128, 64]` עם הפעלת ReLU.
+- **רגולריזציה:** Dropout של 0.3 לאחר כל שכבה.
+- **פלט:** שכבת softmax עם 10 קטגוריות.
+- **פונקציית הפסד:** categorical_crossentropy.
+- **אופטימיזציה:** Adam.
+- **אמצעי שיפור:** משקלי מחלקות והתניה מוקדמת (`EarlyStopping`).
 
 ---
 
 ## מודלים להשוואה
 
-לצורך השוואה, מימשנו גם:
+הושוו גם שני מודלים קלאסיים נוספים:
 
-- Decision Tree Classifier
-- K-Nearest Neighbors (KNN)
+- **Decision Tree**
+- **K-Nearest Neighbors**
 
-שני המודלים משתמשים באותם פיצ'רים ובאותו חלוקה ל־Train/Test.
+כל המודלים עברו על אותם פיצ'רים ובאותה חלוקת אימון/בדיקה.
 
 ---
 
-## מודל בסיס (Baseline)
+## מודלים בסיסיים (Baseline)
 
-מימשנו מודל נאיבי שמנבא תמיד את הקטגוריה הנפוצה ביותר (לרוב class 2). כך נוכל להשוות מול מודלים "חכמים".
+### 1. מודל תווית שכיחה
 
-תוצאות מודל הבסיס:
+מודל זה מנבא תמיד את הקטגוריה השכיחה ביותר ב־Train (class 2). מטרתו להוות קו השוואה לביצועים נאיביים.
 
-- דיוק (Accuracy): 0.20
-- F1 ממוצע משוקלל: 0.06
-- precision ו־recall בשאר הקבוצות: 0.00
+**ביצועים:**
+
+- דיוק: 0.20  
+- F1 ממוצע משוקלל: 0.06  
+- שאר המדדים: כמעט אפס
+
+### 2. מודל אקראי
+
+מודל זה בוחר קטגוריה באקראי לחלוטין לכל שיר. הוא מייצג אסטרטגיה ללא כל למידה מהדאטה.
+
+**ביצועים:**
+
+- דיוק: 0.10  
+- F1 ממוצע משוקלל: 0.12  
+- מדדים נמוכים ואחידים בכל הקטגוריות
 
 ---
 
 ## מדדי הערכה
 
-- **Top-1 Accuracy** – האם התווית שנחזתה היא בדיוק הנכונה.
-- **Top-3 Accuracy** – האם התווית הנכונה הופיעה בין שלוש התחזיות עם ההסתברות הגבוהה ביותר (לפי softmax).
+- **Top-1 Accuracy**: מדד דיוק רגיל – האם החיזוי תואם לתווית.
+- **Top-3 Accuracy**: האם התווית הנכונה הופיעה בין שלוש ההסתברויות הגבוהות ביותר של המודל (לפי softmax).
 
-Top-3 מאפשר הערכה רכה של "קרבה נכונה", גם כשאין דיוק מוחלט.
+Top-3 מאפשר לבחון את קרבת המודל לתוצאה נכונה, גם אם לא מדויקת.
 
 ---
 
 ## תוצאות סופיות
 
-| מודל                | Top-1 Accuracy | Top-3 Accuracy |
-|---------------------|----------------|----------------|
-| רשת נוירונים (Keras) | 0.46           | 0.80           |
-| Decision Tree        | 0.45           | N/A            |
-| K-Nearest Neighbors  | 0.51           | N/A            |
-| מודל בסיס (class 2)  | 0.20           | N/A            |
+| מודל                       | Top-1 Accuracy | Top-3 Accuracy |
+|----------------------------|----------------|----------------|
+| רשת נוירונים (Keras)       | 0.46           | 0.80           |
+| K-Nearest Neighbors         | 0.51           | N/A            |
+| Decision Tree               | 0.45           | N/A            |
+| בסיס (קטגוריה שכיחה)       | 0.20           | N/A            |
+| בסיס רנדומלי               | 0.10           | N/A            |
 
-הרשת הנוירונית השיגה תוצאות טובות מאוד, במיוחד במדדי Top-3, וגם ידעה לחזות היטב קטגוריות נדירות – דבר שמודל הבסיס כשל בו.
+למרות יתרון קל ב־Top-1 עבור KNN, המודל הנוירוני השיג תוצאות טובות יותר בממוצע, במיוחד בקטגוריות נדירות וב־Top-3, דבר שמרמז על למידה כללית עמוקה יותר.
 
 ---
 
 ## מבנה התיקיה
 
-- `model.py` – קובץ ההרצה הראשי
-- `cleaned_data/Spotify_Tracks_lone_artists.csv` – קובץ הדאטה הנקי
-- `model_explanation.md` – קובץ תיעוד זה
-- `requirements.txt` – קובץ ספריות דרושות
-
+- `model.py`: קובץ האימון והערכת המודל הראשי
+- `cleaned_data/Spotify_Tracks_lone_artists.csv`: קובץ הנתונים
+- `model_explanation.md`: קובץ תיעוד זה
+- `requirements.txt`: קובץ ספריות

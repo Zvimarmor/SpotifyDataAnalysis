@@ -19,7 +19,7 @@ from tensorflow.keras.callbacks import EarlyStopping
 from collections import Counter
 
 # ========= SETUP FIGURE OUTPUT DIRECTORY =========
-FIG_DIR = "Final Project/figures"
+FIG_DIR = "Final Project/figures/model_plots"
 os.makedirs(FIG_DIR, exist_ok=True)
 
 # ========= HYPERPARAMETERS =========
