@@ -143,45 +143,16 @@ plt.tight_layout()
 plt.savefig(f"{FIG_DIR}/baseline_confusion_matrix.png")
 plt.close()
 
-# ========= CLASSICAL MODELS FOR COMPARISON =========
+# ========= RANDOM MODEL =========
+random_preds = np.random.randint(0, 10, size=y_test_raw.shape)
+print("\n=== Random Model Report ===")
+print(classification_report(y_test_raw, random_preds))
 
-# Prepare data for classical models
-y_raw_class = df['popularity'].apply(popularity_bucket)
-
-# Train-test split
-X_train_c, X_test_c, y_train_c, y_test_c = train_test_split(
-    X_scaled, y_raw_class, test_size=TEST_SIZE, random_state=RANDOM_STATE)
-
-# --- Decision Tree ---
-tree = DecisionTreeClassifier(random_state=RANDOM_STATE)
-tree.fit(X_train_c, y_train_c)
-tree_preds = tree.predict(X_test_c)
-
-# --- KNN ---
-knn = KNeighborsClassifier(n_neighbors=5)
-knn.fit(X_train_c, y_train_c)
-knn_preds = knn.predict(X_test_c)
-
-# --- Reports ---
-print("\n=== Decision Tree Classification Report ===")
-print(classification_report(y_test_c, tree_preds))
-
-print("\n=== KNN Classification Report ===")
-print(classification_report(y_test_c, knn_preds))
-
-# --- Confusion Matrices ---
-fig, axs = plt.subplots(1, 2, figsize=(12, 5))
-
-sns.heatmap(confusion_matrix(y_test_c, tree_preds), annot=True, fmt='d', cmap='Blues', ax=axs[0])
-axs[0].set_title("Decision Tree Confusion Matrix")
-axs[0].set_xlabel("Predicted")
-axs[0].set_ylabel("True")
-
-sns.heatmap(confusion_matrix(y_test_c, knn_preds), annot=True, fmt='d', cmap='Greens', ax=axs[1])
-axs[1].set_title("KNN Confusion Matrix")
-axs[1].set_xlabel("Predicted")
-axs[1].set_ylabel("True")
-
+plt.figure(figsize=(6,5))
+sns.heatmap(confusion_matrix(y_test_raw, random_preds), annot=True, fmt='d', cmap='Purples')
+plt.title("Random Model Confusion Matrix")
+plt.xlabel("Predicted")
+plt.ylabel("True")
 plt.tight_layout()
-plt.savefig(f"{FIG_DIR}/classical_models_confusion_matrices.png")
+plt.savefig(f"{FIG_DIR}/random_confusion_matrix.png")
 plt.close()
