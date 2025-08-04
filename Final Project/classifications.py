@@ -11,7 +11,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
 
 # ========= FIGURE OUTPUT =========
-FIG_DIR = "Final Project/figures"
+FIG_DIR = "Final Project/figures/model_plots"
 os.makedirs(FIG_DIR, exist_ok=True)
 
 # ========= LOAD DATA =========
