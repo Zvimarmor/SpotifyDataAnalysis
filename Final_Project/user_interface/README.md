@@ -10,9 +10,8 @@ Run:
 
 ```bash
 python Final_Project/user_interface/predict_gui.py
+```
 
-
----
 
 ## How to Use
 
@@ -21,7 +20,6 @@ python Final_Project/user_interface/predict_gui.py
 3. Click the **Predict Popularity** button.
 4. A popup will display the predicted popularity range (e.g., "Predicted Popularity Range: 30–39").
 
----
 
 ## How It Works
 
@@ -31,7 +29,6 @@ python Final_Project/user_interface/predict_gui.py
 - A pre-trained Keras model (`model_weights.h5`) outputs a probability distribution across 10 popularity buckets (0–9).
 - The class with the highest probability determines the predicted range (e.g., class 5 → 50–59).
 
----
 
 ## File Structure
 
@@ -41,14 +38,10 @@ python Final_Project/user_interface/predict_gui.py
 - `scaler.pkl`: The feature scaler used in training.
 - `genre_list.json`: List of available genres for one-hot encoding.
 
----
-
 ## Notes
 
 - MP3 files must be valid and contain at least 30 seconds of audio.
 - This app was trained on Spotify data; generalization to other sources may vary.
-
----
 
 ## Authors
 
