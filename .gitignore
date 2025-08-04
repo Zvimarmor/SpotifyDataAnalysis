@@ -7,6 +7,7 @@ venv/
 cleaned_data/
 raw_data/
 *.csv
+example_song.mp3
 
 # Ignore Python cache files
 __pycache__/
