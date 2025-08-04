@@ -7,7 +7,7 @@ import os
 import re
 
 # ========== SETUP ==========
-FIG_DIR = "Final Project/figures/data_figures"
+FIG_DIR = "Final_project/figures/data_figures"
 os.makedirs(FIG_DIR, exist_ok=True)
 
 # ========== LOAD DATA ==========
@@ -50,7 +50,7 @@ df['year'] = df['year'].astype(int)
 genre_year_popularity = df.groupby(['track_genre', 'year'])['popularity'].mean().reset_index()
 
 # Keep top N most common genres
-top_genres = df['track_genre'].value_counts().head(20).index.tolist()
+top_genres = df['track_genre'].value_counts().head(8).index.tolist()
 genre_year_popularity = genre_year_popularity[genre_year_popularity['track_genre'].isin(top_genres)]
 
 # Plot

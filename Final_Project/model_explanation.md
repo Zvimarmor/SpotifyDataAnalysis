@@ -110,13 +110,13 @@ Top-3 accuracy provides a relaxed measure of model confidence and proximity to c
 
 | Model                      | Top-1 Accuracy | Top-3 Accuracy |
 |---------------------------|----------------|----------------|
-| Neural Network (Keras)    | 0.46           | 0.80           |
-| K-Nearest Neighbors        | 0.51           | N/A            |
-| Decision Tree              | 0.45           | N/A            |
-| Baseline (most frequent)   | 0.20           | N/A            |
-| Baseline (random guessing) | 0.10           | N/A            |
+| Neural Network (Keras)    | 0.50           | 0.86           |
+| K-Nearest Neighbors        | 0.50           | 0.80           |
+| Decision Tree              | 0.42           | 0.43           |
+| Baseline (most frequent)   | 0.20           | 0.21           |
+| Baseline (random guessing) | 0.10           | 0.30           |
 
-Despite the slightly higher Top-1 accuracy of KNN, the neural network showed significantly better Top-3 performance and recall across rare classes, suggesting improved generalization.
+While both the KNN and the neural network models achieved the same Top-1 accuracy, the neural model **significantly outperformed all others in Top-3 accuracy (0.86)**. This suggests that it often predicts values close to the true class even when not exact. Notably, all models benefited from the improved dataset, and the KNN model showed particularly strong Top-3 performance, while the decision tree remained weaker in broader class proximity.
 
 ---
 
@@ -232,18 +232,18 @@ Despite the slightly higher Top-1 accuracy of KNN, the neural network showed sig
 Top-3 מאפשר לבחון את קרבת המודל לתוצאה נכונה, גם אם לא מדויקת.
 
 ---
-
 ## תוצאות סופיות
 
 | מודל                       | Top-1 Accuracy | Top-3 Accuracy |
 |----------------------------|----------------|----------------|
-| רשת נוירונים (Keras)       | 0.46           | 0.80           |
-| K-Nearest Neighbors         | 0.51           | N/A            |
-| Decision Tree               | 0.45           | N/A            |
-| בסיס (קטגוריה שכיחה)       | 0.20           | N/A            |
-| בסיס רנדומלי               | 0.10           | N/A            |
+| רשת נוירונים (Keras)       | 0.50           | 0.86           |
+| K-Nearest Neighbors         | 0.50           | 0.80           |
+| Decision Tree               | 0.42           | 0.43           |
+| בסיס (קטגוריה שכיחה)       | 0.20           | 0.21           |
+| בסיס רנדומלי               | 0.10           | 0.30           |
 
-למרות יתרון קל ב־Top-1 עבור KNN, המודל הנוירוני השיג תוצאות טובות יותר בממוצע, במיוחד בקטגוריות נדירות וב־Top-3, דבר שמרמז על למידה כללית עמוקה יותר.
+הרשת הנוירונית מצטיינת במדד Top-3 עם תוצאה של 86%, מה שמעיד על יכולת למידה עמוקה ומידע סמוי על קרבת השיר לקטגוריה האמיתית. KNN הגיע אף הוא לביצוע טוב מאוד במדד Top-3 (80%), על אף שמבחינת הדיוק (Top-1) שני המודלים המרכזיים היו זהים. מודל Decision Tree חלש יחסית ב־Top-3, אך עדיין השתפר לעומת גרסאות קודמות, ומודל הבסיס הרנדומלי, מפתיע, הצליח להשיג 30% הצלחה ב־Top-3 – בעיקר בשל ריבוי קטגוריות נדירות.
+
 
 ---
 
