@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import os
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -16,6 +17,10 @@ from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.callbacks import EarlyStopping
 
 from collections import Counter
+
+# ========= SETUP FIGURE OUTPUT DIRECTORY =========
+FIG_DIR = "Final Project/figures"
+os.makedirs(FIG_DIR, exist_ok=True)
 
 # ========= HYPERPARAMETERS =========
 TEST_SIZE = 0.25
@@ -105,17 +110,21 @@ sns.heatmap(confusion_matrix(y_true_classes, y_pred_classes), annot=True, fmt='d
 plt.title("Keras Confusion Matrix (10-Class Popularity)")
 plt.xlabel("Predicted")
 plt.ylabel("True")
-plt.show()
+plt.tight_layout()
+plt.savefig(f"{FIG_DIR}/keras_confusion_matrix.png")
+plt.close()
 
 # ========= TRAINING CURVE =========
+plt.figure()
 plt.plot(history.history['accuracy'], label='Train Acc')
 plt.plot(history.history['val_accuracy'], label='Val Acc')
 plt.xlabel("Epoch")
 plt.ylabel("Accuracy")
 plt.title("Training Accuracy over Epochs")
 plt.legend()
-plt.show()
-
+plt.tight_layout()
+plt.savefig(f"{FIG_DIR}/keras_training_accuracy.png")
+plt.close()
 
 # ========= BASELINE MODEL =========
 most_common_class = Counter(y_train_raw).most_common(1)[0][0]
@@ -130,12 +139,13 @@ sns.heatmap(confusion_matrix(y_test_raw, baseline_preds), annot=True, fmt='d', c
 plt.title("Baseline Confusion Matrix")
 plt.xlabel("Predicted")
 plt.ylabel("True")
-plt.show()
-
+plt.tight_layout()
+plt.savefig(f"{FIG_DIR}/baseline_confusion_matrix.png")
+plt.close()
 
 # ========= CLASSICAL MODELS FOR COMPARISON =========
 
-# יישום מחדש של הקלאסים ל-10 רמות פופולריות
+# Prepare data for classical models
 y_raw_class = df['popularity'].apply(popularity_bucket)
 
 # Train-test split
@@ -173,4 +183,5 @@ axs[1].set_xlabel("Predicted")
 axs[1].set_ylabel("True")
 
 plt.tight_layout()
-plt.show()
+plt.savefig(f"{FIG_DIR}/classical_models_confusion_matrices.png")
+plt.close()
