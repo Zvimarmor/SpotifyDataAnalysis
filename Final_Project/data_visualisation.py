@@ -98,13 +98,10 @@ artist_names = top_songs['artists'].astype(str).str.lower()
 artist_names = artist_names.str.replace(r"[;&]", ",", regex=True)
 artist_names = artist_names.str.replace(r"\s+&\s+", ",", regex=True)
 
-# Split to individual names and count name parts
+# Split to names (not individual parts) and count
 name_parts = []
 for entry in artist_names:
-    for artist in entry.split(","):
-        artist = artist.strip()
-        if artist:
-            name_parts.extend(artist.split())
+    name_parts.extend([name.strip() if name.strip() else "Unknown" for name in entry.split(",")])
 
 name_counts = Counter(name_parts)
 filtered_counts = {name: count for name, count in name_counts.items() if count > 2}  # remove too rare
