@@ -16,7 +16,21 @@ librosa==0.10.1      # Feature extraction from audio
 soundfile==0.12.1    # Required by librosa for reading MP3
 joblib==1.3.2        # Optional: for loading sklearn objects (if used instead of pickle)
 
+# Added for feature fallback and math ops
+scipy==1.13.1
+
 # ===============================
 # Dependencies for user interface
 # ===============================
 tk                   # Built-in in most Python installations (used for GUI)
+
+# ===============================
+# Dependencies for Spotify API
+# ===============================
+spotipy==2.23.0      # Spotify API client
+python-dotenv==1.0.1 # For loading SPOTIPY_CLIENT_ID and SECRET from .env (optional)
+
+# ===============================
+# Keras compatibility
+# ===============================
+keras==2.15.0        # Match TensorFlow version (used explicitly in code)
