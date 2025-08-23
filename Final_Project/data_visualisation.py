@@ -42,9 +42,16 @@ df = df.drop(columns=[col for col in columns_to_drop if col in df.columns])
 df = df.dropna(subset=['year'])
 df['year'] = df['year'].astype(int)
 
-# ========== PLOT 1: Grouped Genre Trends Over Time ==========
+# ========== PLOT 1: Top-N Genre Families Bump Chart ==========
 
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
 from scipy import stats
+
+# Parameters
+TOP_N = 5
+MIN_YEARS_IN_TOPN = 6  # Only show genres that appear in top 5 for at least 6 years
 
 # Group related genres
 def group_genres(genre):
@@ -67,80 +74,69 @@ def group_genres(genre):
 # Apply grouping
 df['grouped_genre'] = df['track_genre'].apply(group_genres)
 
-# Calculate trends for grouped genres
-genre_year_stats = df.groupby(['grouped_genre', 'year']).agg({
-    'popularity': ['mean', 'count']
-}).reset_index()
-genre_year_stats.columns = ['grouped_genre', 'year', 'avg_popularity', 'song_count']
+# Aggregate yearly popularity per family
+year_genre = df.groupby(['year', 'grouped_genre'])['popularity'].mean().reset_index()
 
-# Filter for genres with sufficient data
-genre_eligibility = genre_year_stats.groupby('grouped_genre').agg({
-    'song_count': 'sum',
-    'year': 'nunique'
-}).reset_index()
+# Compute rank for each year (1 = most popular)
+year_genre['rank'] = year_genre.groupby('year')['popularity'].rank(ascending=False, method='first')
 
-eligible_genres = genre_eligibility[
-    (genre_eligibility['song_count'] >= 200) & 
-    (genre_eligibility['year'] >= 15)
-]['grouped_genre'].tolist()
+# Keep only top-N ranks, set others to NaN (breaks lines)
+year_genre.loc[year_genre['rank'] > TOP_N, 'rank'] = np.nan
 
-# Calculate trend strength using linear regression
-genre_trends = []
-for genre in eligible_genres:
-    genre_data = genre_year_stats[genre_year_stats['grouped_genre'] == genre]
-    if len(genre_data) >= 10:
-        slope, intercept, r_value, p_value, std_err = stats.linregress(
-            genre_data['year'], 
-            genre_data['avg_popularity']
-        )
-        
-        trend_strength = abs(slope * (r_value ** 2))
-        
-        genre_trends.append({
-            'genre': genre,
-            'slope': slope,
-            'r_squared': r_value ** 2,
-            'trend_strength': trend_strength,
-            'p_value': p_value
-        })
+# Filter families that appear in top-N for at least MIN_YEARS_IN_TOPN years
+valid_families = year_genre[year_genre['rank'].notna()].groupby('grouped_genre')['year'].nunique()
+families_to_keep = valid_families[valid_families >= MIN_YEARS_IN_TOPN].index.tolist()
+year_genre = year_genre[year_genre['grouped_genre'].isin(families_to_keep)]
 
-# Get top 8 genres with strongest statistically significant trends
-trends_df = pd.DataFrame(genre_trends)
-trends_df = trends_df[trends_df['p_value'] < 0.1]
-top_trending = trends_df.nlargest(8, 'trend_strength')['genre'].tolist()
-
-# Create the improved visualization
-plt.figure(figsize=(15, 9))
-plt.style.use('default')  # Clean default style
-
-# Calculate yearly averages for cleaner lines
-yearly_data = df[df['grouped_genre'].isin(top_trending)].groupby(['grouped_genre', 'year'])['popularity'].mean().reset_index()
-
-# Define distinct colors and line styles for better separation
-colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f']
-line_styles = ['-', '-', '-', '-', '--', '--', '-.', ':']
-
-plt.figure(figsize=(15, 9))
+# Create bump chart
+plt.figure(figsize=(14, 8))
 ax = plt.gca()
 
-# Plot each genre with distinct styling
-for i, genre in enumerate(top_trending):
-    genre_data = yearly_data[yearly_data['grouped_genre'] == genre]
-    plt.plot(genre_data['year'], genre_data['popularity'], 
-             color=colors[i % len(colors)],
-             linestyle=line_styles[i % len(line_styles)],
-             linewidth=3,
-             marker='o', 
-             markersize=5,
-             label=genre.replace('-', ' ').title(),
-             alpha=0.9)
+# Use distinct colors for each family - manually select highly contrasting colors
+distinct_colors = [
+    '#1f77b4',  # blue
+    '#ff7f0e',  # orange  
+    '#2ca02c',  # green
+    '#d62728',  # red
+    '#9467bd',  # purple
+    '#8c564b',  # brown
+    '#e377c2',  # pink
+    '#7f7f7f',  # gray
+    '#bcbd22',  # olive
+    '#17becf',  # cyan
+    '#ffbb78',  # light orange
+    '#98df8a',  # light green
+    '#ff9896',  # light red
+    '#c5b0d5',  # light purple
+    '#c49c94'   # light brown
+]
 
-# Professional styling
-plt.title("Genre Family Popularity Trends Over Time", fontsize=20, fontweight='bold', pad=20)
-plt.xlabel("Year", fontsize=16, fontweight='600')
-plt.ylabel("Average Popularity Score", fontsize=16, fontweight='600')
+# Take only as many colors as we need
+colors = distinct_colors[:len(families_to_keep)]
+family_colors = dict(zip(families_to_keep, colors))
 
-# Clean grid and axes
+# Plot lines for each family
+for family in families_to_keep:
+    family_data = year_genre[year_genre['grouped_genre'] == family].sort_values('year')
+    
+    # Plot the line - smoother curve without markers
+    plt.plot(family_data['year'], family_data['rank'], 
+             color=family_colors[family], linewidth=4, 
+             alpha=0.7, label=family.replace('-', ' ').title(),
+             linestyle='-', marker=None)
+
+# Styling
+plt.title(f"Top-{TOP_N} Genre Families by Year (Bump Chart)", fontsize=18, fontweight='bold', pad=20)
+plt.xlabel("Year", fontsize=14, fontweight='600')
+plt.ylabel("Rank (1 = Most Popular)", fontsize=14, fontweight='600')
+
+# Invert y-axis so rank 1 is at top
+plt.gca().invert_yaxis()
+
+# Set y-axis ticks to integers 1 through TOP_N
+plt.yticks(range(1, TOP_N + 1))
+
+# Clean grid and spines
 plt.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
 ax.set_axisbelow(True)
 ax.spines['top'].set_visible(False)
@@ -148,28 +144,21 @@ ax.spines['right'].set_visible(False)
 ax.spines['left'].set_linewidth(1)
 ax.spines['bottom'].set_linewidth(1)
 
-# Better legend
-plt.legend(title="Genre Family", 
-          title_fontsize=14, 
-          fontsize=12,
-          bbox_to_anchor=(1.02, 1), 
+# Add legend as color bar next to the graph
+plt.legend(title="Genre Families", 
+          title_fontsize=12, 
+          fontsize=11,
+          bbox_to_anchor=(1.05, 1), 
           loc='upper left',
           frameon=True,
-          fancybox=True,
-          shadow=True)
+          fancybox=False,
+          shadow=False,
+          borderaxespad=0)
 
-# Clean tick formatting
-plt.xticks(fontsize=12)
-plt.yticks(fontsize=12)
-plt.xticks(rotation=45)
-
-# Set y-axis limits for better focus
-y_min = yearly_data['popularity'].min() - 5
-y_max = yearly_data['popularity'].max() + 5
-plt.ylim(y_min, y_max)
-
+# Adjust layout to accommodate legend
+plt.subplots_adjust(right=0.75)
 plt.tight_layout()
-plt.savefig(f"{FIG_DIR}/grouped_genre_trends_over_time.png", dpi=300, bbox_inches='tight')
+plt.savefig(f"{FIG_DIR}/topN_genre_bump_chart.png", dpi=300, bbox_inches='tight')
 plt.close()
 
 # ===== PLOT 2: Word Cloud – Popular Track Titles =====
