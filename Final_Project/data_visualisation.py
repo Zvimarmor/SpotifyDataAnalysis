@@ -47,6 +47,7 @@ df['year'] = df['year'].astype(int)
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+import pandas as pd
 from scipy import stats
 
 # Parameters
@@ -59,6 +60,7 @@ def group_genres(genre):
     rock_related = ['alt-rock', 'hard-rock', 'j-rock', 'psych-rock', 'punk-rock', 'rock-n-roll', 'rock', 'rockabilly']
     house_related = ['chicago-house', 'deep-house', 'house', 'progressive-house']
     metal_related = ['black-metal', 'death-metal', 'heavy-metal', 'metal', 'metalcore']
+    latin_related = ['latin', 'latino']  # Group latin and latino together
     
     if genre in pop_related:
         return 'pop-family'
@@ -68,6 +70,8 @@ def group_genres(genre):
         return 'house-family'
     elif genre in metal_related:
         return 'metal-family'
+    elif genre in latin_related:
+        return 'latin-family'
     else:
         return genre
 
@@ -126,7 +130,7 @@ for family in families_to_keep:
              linestyle='-', marker=None)
 
 # Styling
-plt.title(f"Top-{TOP_N} Genre Families by Year (Bump Chart)", fontsize=18, fontweight='bold', pad=20)
+plt.title(f"Top-{TOP_N} Popular Genres By Year (2000-2022)", fontsize=18, fontweight='bold', pad=20)
 plt.xlabel("Year", fontsize=14, fontweight='600')
 plt.ylabel("Rank (1 = Most Popular)", fontsize=14, fontweight='600')
 
@@ -160,6 +164,63 @@ plt.subplots_adjust(right=0.75)
 plt.tight_layout()
 plt.savefig(f"{FIG_DIR}/topN_genre_bump_chart.png", dpi=300, bbox_inches='tight')
 plt.close()
+
+# ========== ALTERNATIVE VERSION: Popularity Scores Instead of Rankings ==========
+# Uncomment the code below and comment out the above version to show actual popularity scores
+#
+# # Aggregate yearly popularity per family
+# year_genre = df.groupby(['year', 'grouped_genre'])['popularity'].mean().reset_index()
+#
+# # Compute rank for each year (1 = most popular) - keep for filtering but plot popularity
+# year_genre['rank'] = year_genre.groupby('year')['popularity'].rank(ascending=False, method='first')
+#
+# # Keep only top-N ranks, but preserve popularity scores
+# top_n_data = year_genre[year_genre['rank'] <= TOP_N].copy()
+#
+# # Filter families that appear in top-N for at least MIN_YEARS_IN_TOPN years
+# valid_families = top_n_data.groupby('grouped_genre')['year'].nunique()
+# families_to_keep = valid_families[valid_families >= MIN_YEARS_IN_TOPN].index.tolist()
+# year_genre = top_n_data[top_n_data['grouped_genre'].isin(families_to_keep)]
+#
+# # For families not in top-N in certain years, set popularity to NaN (breaks lines)
+# all_years = sorted(year_genre['year'].unique())
+# for family in families_to_keep:
+#     family_mask = year_genre['grouped_genre'] == family
+#     for year in all_years:
+#         year_family_mask = family_mask & (year_genre['year'] == year)
+#         if not year_family_mask.any():
+#             # Add NaN entry for missing year to break the line
+#             new_row = pd.DataFrame({
+#                 'year': [year], 
+#                 'grouped_genre': [family], 
+#                 'popularity': [np.nan],
+#                 'rank': [np.nan]
+#             })
+#             year_genre = pd.concat([year_genre, new_row], ignore_index=True)
+#
+# # Create popularity-based chart
+# plt.figure(figsize=(14, 8))
+# ax = plt.gca()
+#
+# # Plot lines for each family using popularity scores
+# for family in families_to_keep:
+#     family_data = year_genre[year_genre['grouped_genre'] == family].sort_values('year')
+#     
+#     # Plot the line using popularity scores instead of ranks
+#     plt.plot(family_data['year'], family_data['popularity'], 
+#              color=family_colors[family], linewidth=4, 
+#              alpha=0.7, label=family.replace('-', ' ').title(),
+#              linestyle='-', marker=None)
+#
+# # Styling for popularity version
+# plt.title(f"Top-{TOP_N} Popular Genres By Year (2000-2022) - Popularity Scores", fontsize=18, fontweight='bold', pad=20)
+# plt.xlabel("Year", fontsize=14, fontweight='600')
+# plt.ylabel("Average Popularity Score", fontsize=14, fontweight='600')
+#
+# # Set y-axis limits based on data range (no inversion needed)
+# y_min = year_genre['popularity'].min() - 2
+# y_max = year_genre['popularity'].max() + 2
+# plt.ylim(y_min, y_max)
 
 # ===== PLOT 2: Word Cloud – Popular Track Titles =====
 def clean_title(title):
